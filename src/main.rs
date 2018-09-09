@@ -17,12 +17,18 @@ fn handle_connection(mut stream: TcpStream) {
     let mut buffer = [0; 512];
     stream.read(&mut buffer).unwrap();
 
-    let mut file = File::open("hello.html").unwrap();
-    let mut contents = String::new();
-    file.read_to_string(&mut contents).unwrap();
+    let get = b"GET / HTTP/1.1\r\n";
 
-    let response = format!("HTTP/1.1 200 OK\r\n\n{}", contents);
+    if buffer.starts_with(get) {
+        let mut file = File::open("hello.html").unwrap();
+        let mut contents = String::new();
+        file.read_to_string(&mut contents).unwrap();
 
-    stream.write(response.as_bytes()).unwrap();
-    stream.flush().unwrap();
+        let response = format!("HTTP/1.1 200 OK\r\n\n{}", contents);
+
+        stream.write(response.as_bytes()).unwrap();
+        stream.flush().unwrap();
+    } else {
+        // some other request;
+    }
 }
