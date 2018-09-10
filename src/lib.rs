@@ -3,8 +3,11 @@ use std::fmt;
 use std::fmt::Display;
 use std::fmt::Formatter;
 use std::result::Result;
+use std::thread;
 
-pub struct ThreadPool;
+pub struct ThreadPool {
+    threads: Vec<thread::JoinHandle<()>>,
+}
 
 impl ThreadPool {
     pub fn new(size: usize) -> Result<ThreadPool, PoolCreationError> {
@@ -13,7 +16,12 @@ impl ThreadPool {
             return Err(err);
         }
 
-        let pool = ThreadPool {};
+        let mut threads = Vec::with_capacity(size);
+        for _ in 0..size {
+            // create some threads
+        }
+
+        let pool = ThreadPool { threads: threads };
         Ok(pool)
     }
 
