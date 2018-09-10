@@ -3,11 +3,17 @@ use std::fmt;
 use std::fmt::Display;
 use std::fmt::Formatter;
 use std::result::Result;
+use std::sync::mpsc;
+use std::sync::Arc;
+use std::sync::Mutex;
 use std::thread;
 
 pub struct ThreadPool {
     workers: Vec<Worker>,
+    sender: mpsc::Sender<Job>,
 }
+
+struct Job;
 
 impl ThreadPool {
     pub fn new(size: usize) -> Result<ThreadPool, PoolCreationError> {
@@ -16,13 +22,18 @@ impl ThreadPool {
             return Err(err);
         }
 
-        let mut workers = Vec::with_capacity(size);
+        let (sender, receiver) = mpsc::channel();
+        let receiver = Arc::new(Mutex::new(receiver));
 
+        let mut workers = Vec::with_capacity(size);
         for id in 0..size {
-            workers.push(Worker::new(id));
+            workers.push(Worker::new(id, Arc::clone(&receiver)));
         }
 
-        let pool = ThreadPool { workers: workers };
+        let pool = ThreadPool {
+            workers: workers,
+            sender: sender,
+        };
         Ok(pool)
     }
 
@@ -39,8 +50,10 @@ struct Worker {
 }
 
 impl Worker {
-    fn new(id: usize) -> Worker {
-        let thread = thread::spawn(|| {});
+    fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Job>>>) -> Worker {
+        let thread = thread::spawn(|| {
+            receiver;
+        });
         Worker {
             id: id,
             thread: thread,
