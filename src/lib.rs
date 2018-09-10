@@ -6,7 +6,7 @@ use std::result::Result;
 use std::thread;
 
 pub struct ThreadPool {
-    threads: Vec<thread::JoinHandle<()>>,
+    workers: Vec<Worker>,
 }
 
 impl ThreadPool {
@@ -16,12 +16,13 @@ impl ThreadPool {
             return Err(err);
         }
 
-        let mut threads = Vec::with_capacity(size);
-        for _ in 0..size {
-            // create some threads
+        let mut workers = Vec::with_capacity(size);
+
+        for id in 0..size {
+            workers.push(Worker::new(id));
         }
 
-        let pool = ThreadPool { threads: threads };
+        let pool = ThreadPool { workers: workers };
         Ok(pool)
     }
 
@@ -29,6 +30,21 @@ impl ThreadPool {
     where
         F: FnOnce() + Send + 'static,
     {
+    }
+}
+
+struct Worker {
+    id: usize,
+    thread: thread::JoinHandle<()>,
+}
+
+impl Worker {
+    fn new(id: usize) -> Worker {
+        let thread = thread::spawn(|| {});
+        Worker {
+            id: id,
+            thread: thread,
+        }
     }
 }
 
