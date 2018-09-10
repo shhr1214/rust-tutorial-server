@@ -63,6 +63,15 @@ impl ThreadPool {
 
 impl Drop for ThreadPool {
     fn drop(&mut self) {
+        println!("sending terminate message to all workers.");
+
+        // worker の数だけ terminate を送っている。
+        for _ in &mut self.workers {
+            self.sender.send(Message::Terminate).unwrap();
+        }
+
+        println!("shutting down all workers.");
+
         for worker in &mut self.workers {
             println!("shutting down worker {}", worker.id);
 
